@@ -1,0 +1,70 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module is="app-loader">
+  <style>
+    :host .app-loader-main, .app-loader-screen {
+      opacity: 0;
+      transition: opacity 500ms;
+    }
+
+    :host .app-loader-screen {
+      opacity: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      position: absolute;
+      z-index: 100;
+    }
+  </style>
+  <template>
+    <div class="app-loader-screen">
+      <content select="[loader]"></content>
+    </div>
+    <div class="app-loader-main">
+      <content select="template"></content>
+    </div>
+  </template>
+  <script>
+    Polymer({
+      is: "app-loader",
+      listeners: {
+        "ready": "handleReady",
+        "load": "handleReady"
+      },
+      ready: function () {
+        this.main = this.querySelector(".app-loader-main");
+        this.template = this.querySelector(".app-loader-main template");
+
+        var node = document.importNode(this.template.content, true);
+        this.count = 0;
+        [].forEach.call(node.childNodes, function (el) {
+          if (el.tagName === "LINK") {
+            el.onload = this.handleReady.bind(this);
+            this.count += 1;
+          }
+        }.bind(this));
+        this.main.appendChild(node);
+      },
+      handleReady: function (e) {
+        this.count -= 1;
+        if (this.count <= 0) {
+          this.show();
+        }
+      },
+      show: function () {
+        requestAnimationFrame(function () {
+          this.querySelector(".app-loader-main").style.opacity = 1;
+
+          var screen = this.querySelector(".app-loader-screen");
+          screen.style.opacity = 0;
+
+          setTimeout(function () {
+            screen.parentNode.removeChild(screen);
+          }, 500);
+        }.bind(this));
+      }
+    })
+  </script>
+</dom-module>
